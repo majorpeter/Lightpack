@@ -40,19 +40,37 @@ namespace {
             const unsigned char* buffer,
             unsigned int pitch,
             const QRect& rect,
-            int* dest) {
+            int* dest,
+            bool optimized = true) {
         register unsigned int ch0 = 0, ch1 = 0, ch2 = 0;
 
         // count the amount of pixels taken into account
         int count = 0;
-        for(int currentY = 0; currentY < rect.height(); currentY++) {
-            int index = baseIndexOfLine(currentY, pitch, rect);
-            for(int currentX = 0; currentX < rect.width(); currentX += 4) {
-                ch0 += buffer[index]   + buffer[index + 4] + buffer[index + 8 ] + buffer[index + 12];
-                ch1 += buffer[index+1] + buffer[index + 5] + buffer[index + 9 ] + buffer[index + 13];
-                ch2 += buffer[index+2] + buffer[index + 6] + buffer[index + 10] + buffer[index + 14];
-                count += 4;
-                index += bytesPerPixel * 4;
+
+        if (optimized) {
+            static const int rowsRequired = 16;
+            static const int columnsRequired = 16;
+
+            for (int currentY = 0; currentY < rect.height(); currentY += rect.height() / rowsRequired) {
+                int index = baseIndexOfLine(currentY, pitch, rect);
+                for (int currentX = 0; currentX < rect.width(); currentX += rect.width() / columnsRequired) {
+                    ch0 += buffer[index];
+                    ch1 += buffer[index + 1];
+                    ch2 += buffer[index + 2];
+                    count += 1;
+                    index += (rect.width() / columnsRequired) * bytesPerPixel;
+                }
+            }
+        } else {
+            for(int currentY = 0; currentY < rect.height(); currentY++) {
+                int index = baseIndexOfLine(currentY, pitch, rect);
+                for(int currentX = 0; currentX < rect.width(); currentX += 4) {
+                    ch0 += buffer[index]   + buffer[index + 4] + buffer[index + 8 ] + buffer[index + 12];
+                    ch1 += buffer[index+1] + buffer[index + 5] + buffer[index + 9 ] + buffer[index + 13];
+                    ch2 += buffer[index+2] + buffer[index + 6] + buffer[index + 10] + buffer[index + 14];
+                    count += 4;
+                    index += bytesPerPixel * 4;
+                }
             }
         }
 
