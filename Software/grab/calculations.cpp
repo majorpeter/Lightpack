@@ -32,51 +32,57 @@ namespace {
         int r, g, b;
     };
 
-    static int accumulateBufferFormatArgb(
-            const unsigned char *buffer,
+    static int accumulateBuffer(
+            const unsigned char* buffer,
             unsigned int pitch,
-            const QRect &rect,
-            ColorValue *resultColor) {
-        register unsigned int r=0, g=0, b=0;
-        int count = 0; // count the amount of pixels taken into account
+            const QRect& rect,
+            int* dest) {
+        register unsigned int ch0 = 0, ch1 = 0, ch2 = 0;
+
+        // count the amount of pixels taken into account
+        int count = 0;
         for(int currentY = 0; currentY < rect.height(); currentY++) {
             int index = pitch * (rect.y()+currentY) + rect.x()*bytesPerPixel;
             for(int currentX = 0; currentX < rect.width(); currentX += 4) {
-                b += buffer[index]   + buffer[index + 4] + buffer[index + 8 ] + buffer[index + 12];
-                g += buffer[index+1] + buffer[index + 5] + buffer[index + 9 ] + buffer[index + 13];
-                r += buffer[index+2] + buffer[index + 6] + buffer[index + 10] + buffer[index + 14];
+                ch0 += buffer[index]   + buffer[index + 4] + buffer[index + 8 ] + buffer[index + 12];
+                ch1 += buffer[index+1] + buffer[index + 5] + buffer[index + 9 ] + buffer[index + 13];
+                ch2 += buffer[index+2] + buffer[index + 6] + buffer[index + 10] + buffer[index + 14];
                 count += 4;
                 index += bytesPerPixel * 4;
             }
         }
 
-        resultColor->r = r;
-        resultColor->g = g;
-        resultColor->b = b;
+        dest[0] = ch0;
+        dest[1] = ch1;
+        dest[2] = ch2;
         return count;
     }
 
-    static int accumulateBufferFormatAbgr(
+    static inline int accumulateBufferFormatArgb(
             const unsigned char *buffer,
             unsigned int pitch,
             const QRect &rect,
             ColorValue *resultColor) {
-        register unsigned int r=0, g=0, b=0;
-        int count = 0; // count the amount of pixels taken into account
-        for(int currentY = 0; currentY < rect.height(); currentY++) {
-            int index = pitch * (rect.y()+currentY) + rect.x()*bytesPerPixel;
-            for(int currentX = 0; currentX < rect.width(); currentX += 4) {
-                r += buffer[index]   + buffer[index + 4] + buffer[index + 8 ] + buffer[index + 12];
-                g += buffer[index+1] + buffer[index + 5] + buffer[index + 9 ] + buffer[index + 13];
-                b += buffer[index+2] + buffer[index + 6] + buffer[index + 10] + buffer[index + 14];
-                count += 4;
-                index += bytesPerPixel * 4;
-            }
-        }
+        int channels[3];
+        int count = accumulateBuffer(buffer, pitch, rect, channels);
 
-        resultColor->r = r;
-        resultColor->g = g;
-        resultColor->b = b;
+        resultColor->r = channels[2];
+        resultColor->g = channels[1];
+        resultColor->b = channels[0];
+        return count;
+    }
+
+    static inline int accumulateBufferFormatAbgr(
+            const unsigned char *buffer,
+            unsigned int pitch,
+            const QRect &rect,
+            ColorValue *resultColor) {
+        int channels[3];
+        int count = accumulateBuffer(buffer, pitch, rect, channels);
+
+        resultColor->r = channels[0];
+        resultColor->g = channels[1];
+        resultColor->b = channels[2];
         return count;
     }
 
@@ -85,23 +91,9 @@ namespace {
             unsigned int pitch,
             const QRect &rect,
             ColorValue *resultColor) {
-        register unsigned int r=0, g=0, b=0;
-        int count = 0; // count the amount of pixels taken into account
-        for(int currentY = 0; currentY < rect.height(); currentY++) {
-            int index = pitch * (rect.y()+currentY) + rect.x()*bytesPerPixel;
-            for(int currentX = 0; currentX < rect.width(); currentX += 4) {
-                b += buffer[index+1] + buffer[index + 5] + buffer[index + 9 ] + buffer[index + 13];
-                g += buffer[index+2] + buffer[index + 6] + buffer[index + 10] + buffer[index + 14];
-                r += buffer[index+3] + buffer[index + 7] + buffer[index + 11] + buffer[index + 15];
-                count += 4;
-                index += bytesPerPixel * 4;
-            }
-        }
-
-        resultColor->r = r;
-        resultColor->g = g;
-        resultColor->b = b;
-        return count;
+        // transforms buffer into ARGB, since we don't care about A channel
+        buffer += 1;
+        return accumulateBufferFormatArgb(buffer, pitch, rect, resultColor);
     }
 
     static int accumulateBufferFormatBgra(
@@ -109,23 +101,9 @@ namespace {
             unsigned int pitch,
             const QRect &rect,
             ColorValue *resultColor) {
-        register unsigned int r=0, g=0, b=0;
-        int count = 0; // count the amount of pixels taken into account
-        for(int currentY = 0; currentY < rect.height(); currentY++) {
-            int index = pitch * (rect.y()+currentY) + rect.x()*bytesPerPixel;
-            for(int currentX = 0; currentX < rect.width(); currentX += 4) {
-                r += buffer[index+1] + buffer[index + 5] + buffer[index + 9 ] + buffer[index + 13];
-                g += buffer[index+2] + buffer[index + 6] + buffer[index + 10] + buffer[index + 14];
-                b += buffer[index+3] + buffer[index + 7] + buffer[index + 11] + buffer[index + 15];
-                count += 4;
-                index += bytesPerPixel * 4;
-            }
-        }
-
-        resultColor->r = r;
-        resultColor->g = g;
-        resultColor->b = b;
-        return count;
+        // transforms buffer into ABGR, since we don't care about A channel
+        buffer += 1;
+        return accumulateBufferFormatAbgr(buffer, pitch, rect, resultColor);
     }
 } // namespace
 
