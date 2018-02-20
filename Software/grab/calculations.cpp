@@ -32,6 +32,10 @@ namespace {
         int r, g, b;
     };
 
+    static inline int baseIndexOfLine(int currentY, unsigned int pitch, const QRect& rect) {
+        return pitch * (rect.y()+currentY) + rect.x()*bytesPerPixel;
+    }
+
     static int accumulateBuffer(
             const unsigned char* buffer,
             unsigned int pitch,
@@ -42,7 +46,7 @@ namespace {
         // count the amount of pixels taken into account
         int count = 0;
         for(int currentY = 0; currentY < rect.height(); currentY++) {
-            int index = pitch * (rect.y()+currentY) + rect.x()*bytesPerPixel;
+            int index = baseIndexOfLine(currentY, pitch, rect);
             for(int currentX = 0; currentX < rect.width(); currentX += 4) {
                 ch0 += buffer[index]   + buffer[index + 4] + buffer[index + 8 ] + buffer[index + 12];
                 ch1 += buffer[index+1] + buffer[index + 5] + buffer[index + 9 ] + buffer[index + 13];
