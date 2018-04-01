@@ -1,26 +1,26 @@
 /*
 * ZoneConfiguration.cpp
 *
-*  Created on: 16.2.2017
-*     Project: Prismatik
+*	Created on: 16.2.2017
+*		Project: Prismatik
 *
-*  Copyright (c) 2017 Patrick Siegler
+*	Copyright (c) 2017 Patrick Siegler
 *
-*  Lightpack is an open-source, USB content-driving ambient lighting
-*  hardware.
+*	Lightpack is an open-source, USB content-driving ambient lighting
+*	hardware.
 *
-*  Prismatik is a free, open-source software: you can redistribute it and/or
-*  modify it under the terms of the GNU General Public License as published
-*  by the Free Software Foundation, either version 2 of the License, or
-*  (at your option) any later version.
+*	Prismatik is a free, open-source software: you can redistribute it and/or
+*	modify it under the terms of the GNU General Public License as published
+*	by the Free Software Foundation, either version 2 of the License, or
+*	(at your option) any later version.
 *
-*  Prismatik and Lightpack files is distributed in the hope that it will be
-*  useful, but WITHOUT ANY WARRANTY; without even the implied warranty of
-*  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-*  General Public License for more details.
+*	Prismatik and Lightpack files is distributed in the hope that it will be
+*	useful, but WITHOUT ANY WARRANTY; without even the implied warranty of
+*	MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.	See the GNU
+*	General Public License for more details.
 *
-*  You should have received a copy of the GNU General Public License
-*  along with this program.  If not, see <http://www.gnu.org/licenses/>.
+*	You should have received a copy of the GNU General Public License
+*	along with this program.	If not, see <http://www.gnu.org/licenses/>.
 *
 */
 
@@ -71,7 +71,7 @@ AbstractLedDevice * WizardPageUsingDevice::device()
 void WizardPageUsingDevice::turnLightOn(int id)
 {
 	QList<QRgb> lights;
-	for (int i = 0; i < device()->maxLedsCount(); i++)
+	for (int i = 0; i < _transSettings->ledCount; i++)
 	{
 		if (i == id)
 			lights.append(qRgb(255, 255, 255));
@@ -84,7 +84,7 @@ void WizardPageUsingDevice::turnLightOn(int id)
 void WizardPageUsingDevice::turnLightsOn(QRgb color)
 {
 	QList<QRgb> lights;
-	for (int i = 0; i < _transSettings->zonePositions.size(); i++)
+	for (int i = 0; i < _transSettings->ledCount; i++)
 	{
 		lights.append(color);
 	}
@@ -94,7 +94,7 @@ void WizardPageUsingDevice::turnLightsOn(QRgb color)
 void WizardPageUsingDevice::turnLightsOff()
 {
 	QList<QRgb> lights;
-	for (int i = 0; i < device()->maxLedsCount(); i++)
+	for (int i = 0; i < _transSettings->ledCount; i++)
 	{
 		lights.append(0);
 	}
