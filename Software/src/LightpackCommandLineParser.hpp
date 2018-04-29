@@ -42,7 +42,6 @@ public:
 	bool isSetBacklightOn() const;
 	bool isSetDebuglevel() const;
 	bool isSetProfile() const;
-	bool isSetStartAfterUpdate() const;
 	// Valid only if isSetDebuglevel() is true.
 	Debug::DebugLevels debugLevel() const;
 
@@ -69,8 +68,6 @@ private:
 	const QCommandLineOption m_backlightOnOption;
 	// --debug=[high | mid | low | zero]
 	const QCommandLineOption m_debugLevelOption;
-	// --startafterupdate
-	QCommandLineOption m_startAfterUpdateOption;
 
 	// Keep this for a while for backward compatibility
 	// TODO: remove those options.

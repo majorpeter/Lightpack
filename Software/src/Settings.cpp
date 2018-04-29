@@ -76,6 +76,7 @@ static const QString ConnectedDevice = "ConnectedDevice";
 static const QString SupportedDevices = "SupportedDevices";
 static const QString CheckForUpdates = "CheckForUpdates";
 static const QString InstallUpdates = "InstallForUpdates";
+static const QString AutoUpdatingVersion = "AutoUpdatingVersion";
 
 // [Hotkeys]
 namespace Hotkeys
@@ -258,7 +259,7 @@ bool Settings::Initialize( const QString & applicationDirPath, bool isDebugLevel
 	QString mainConfigPath = getMainConfigPath();
 	bool settingsWasPresent = QFileInfo(mainConfigPath).exists();
 
-	m_mainConfig = new QSettings(getMainConfigPath(), QSettings::IniFormat);
+	m_mainConfig = new QSettings(mainConfigPath, QSettings::IniFormat);
 	m_mainConfig->setIniCodec("UTF-8");
 
 	setNewOptionMain(Main::Key::MainConfigVersion,		Main::Value::MainConfigVersion /* rewrite */);
@@ -819,6 +820,17 @@ QStringList Settings::getSupportedSerialPortBaudRates()
 	QStringList list;
 
 	// TODO: Add more baud rates if need it
+	list.append("2000000");
+	list.append("1500000");
+	list.append("1000000");
+	list.append("921600");
+	list.append("500000");
+	list.append("460800");
+	list.append("256000");
+	list.append("230400");
+	list.append("153600");
+	list.append("128000");
+
 	list.append("115200");
 	list.append("57600");
 	list.append("9600");
@@ -1620,6 +1632,14 @@ bool Settings::isInstallUpdatesEnabled() {
 
 void Settings::setInstallUpdatesEnabled(bool isEnabled) {
 	setValueMain(Main::Key::InstallUpdates, isEnabled);
+}
+
+QString Settings::getAutoUpdatingVersion() {
+	return valueMain(Main::Key::AutoUpdatingVersion).toString();
+}
+
+void Settings::setAutoUpdatingVersion(const QString & version) {
+	setValueMain(Main::Key::AutoUpdatingVersion, version);
 }
 
 //

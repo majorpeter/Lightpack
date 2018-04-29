@@ -67,10 +67,8 @@ GrabManager::GrabManager(QWidget *parent) : QObject(parent)
 
 	m_parentWidget = parent;
 
-	m_timeEval = new TimeEvaluations();
-
-	m_fpsMs = 0;
-	m_noGrabCount = 0;
+	m_grabCountLastInterval = 0;
+	m_grabCountThisInterval = 0;
 
 	m_grabberContext = new GrabberContext();
 
@@ -111,7 +109,6 @@ GrabManager::~GrabManager()
 {
 	DEBUG_LOW_LEVEL << Q_FUNC_INFO;
 
-	delete m_timeEval;
 	m_grabber = NULL;
 	delete m_timerFakeGrab;
 	delete m_timerUpdateFPS;
@@ -350,6 +347,9 @@ void GrabManager::handleGrabbedColors()
 		return;
 	}	
 
+	// Work on a copy
+	m_colorsProcessing = m_colorsNew;
+
 	bool isColorsChanged = false;
 
 	int avgR = 0, avgG = 0, avgB = 0;
@@ -358,7 +358,7 @@ void GrabManager::handleGrabbedColors()
 #ifdef Q_OS_WIN
 	if (m_isApplyGammaRamp)
 	{
-		WinUtils::ApplyPrimaryGammaRamp(m_colorsNew);
+		WinUtils::ApplyPrimaryGammaRamp(m_colorsProcessing);
 	}
 #endif
 
@@ -368,10 +368,10 @@ void GrabManager::handleGrabbedColors()
 		{
 			if (m_ledWidgets[i]->isAreaEnabled())
 			{
-					avgR += qRed(m_colorsNew[i]);
-					avgG += qGreen(m_colorsNew[i]);
-					avgB += qBlue(m_colorsNew[i]);
-					countGrabEnabled++;
+				avgR += qRed(m_colorsProcessing[i]);
+				avgG += qGreen(m_colorsProcessing[i]);
+				avgB += qBlue(m_colorsProcessing[i]);
+				countGrabEnabled++;
 			}
 		}
 		if (countGrabEnabled != 0)
@@ -385,14 +385,14 @@ void GrabManager::handleGrabbedColors()
 		{
 			if (m_ledWidgets[ledIndex]->isAreaEnabled())
 			{
-				m_colorsNew[ledIndex] = qRgb(avgR, avgG, avgB);
+				m_colorsProcessing[ledIndex] = qRgb(avgR, avgG, avgB);
 			}
 		}
 	}
 
 	for (int i = 0; i < m_ledWidgets.size(); i++)
 	{
-		QRgb newColor = m_colorsNew[i];
+		QRgb newColor = m_colorsProcessing[i];
 		if (m_overBrighten) {
 			int dRed = qRed(newColor);
 			int dGreen = qGreen(newColor);
@@ -414,9 +414,7 @@ void GrabManager::handleGrabbedColors()
 		emit updateLedsColors(m_colorsCurrent);
 	}
 
-	m_fpsMs = m_timeEval->howLongItEnd();
-	m_noGrabCount = 0;
-	m_timeEval->howLongItStart();
+	m_grabCountThisInterval++;
 
 	if (m_isSendDataOnlyIfColorsChanged == false)
 	{
@@ -439,9 +437,10 @@ void GrabManager::timeoutFakeGrab()
 void GrabManager::timeoutUpdateFPS()
 {
 	DEBUG_HIGH_LEVEL << Q_FUNC_INFO;
-	m_noGrabCount++;
-	if (m_noGrabCount > 2) m_fpsMs = 0;
-	emit ambilightTimeOfUpdatingColors(m_fpsMs);
+	emit ambilightTimeOfUpdatingColors((2.0 * FPS_UPDATE_INTERVAL) / (m_grabCountLastInterval + m_grabCountThisInterval));
+
+	m_grabCountLastInterval = m_grabCountThisInterval;
+	m_grabCountThisInterval = 0;
 }
 
 void GrabManager::pauseWhileResizeOrMoving()

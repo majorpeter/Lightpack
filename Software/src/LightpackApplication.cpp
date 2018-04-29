@@ -104,7 +104,6 @@ void LightpackApplication::initializeAll(const QString & appDirPath)
 
 	m_applicationDirPath = appDirPath;
 	m_noGui = false;
-	m_isStartAfterUpdate = false;
 	m_isSessionLocked = false;
 
 
@@ -128,7 +127,7 @@ void LightpackApplication::initializeAll(const QString & appDirPath)
 		m_settingsWindow = new SettingsWindow();
 		if (trayAvailable) {
 			m_settingsWindow->setVisible(false); /* Load to tray */
-			m_settingsWindow->createTrayIcon(m_isStartAfterUpdate);
+			m_settingsWindow->createTrayIcon();
 		}
 		else
 			m_settingsWindow->setVisible(true);
@@ -286,9 +285,9 @@ void LightpackApplication::startBacklight()
 	}
 
 	if (m_backlightStatus == Backlight::StatusOff)
-		m_ledDeviceManager->switchOffLeds();
+		QMetaObject::invokeMethod(m_ledDeviceManager, "switchOffLeds", Qt::QueuedConnection);
 	else
-		m_ledDeviceManager->switchOnLeds();
+		QMetaObject::invokeMethod(m_ledDeviceManager, "switchOnLeds", Qt::QueuedConnection);
 
 
 	switch (m_backlightStatus)
@@ -375,7 +374,8 @@ void LightpackApplication::onSessionChange(int change)
 					getLightpackApp()->settingsWnd()->switchOnLeds();
 				}
 			}
-			m_ledDeviceManager->updateDeviceSettings();
+
+			QMetaObject::invokeMethod(m_ledDeviceManager, "updateDeviceSettings", Qt::QueuedConnection);
 			break;
 	}
 }
@@ -451,11 +451,6 @@ void LightpackApplication::processCommandLineArguments()
 	{
 		g_debugLevel = parser.debugLevel();
 		m_isDebugLevelObtainedFromCmdArgs = true;
-	}
-
-	if (parser.isSetStartAfterUpdate())
-	{
-		m_isStartAfterUpdate = true;
 	}
 
 	if (m_isDebugLevelObtainedFromCmdArgs)
@@ -757,7 +752,7 @@ void LightpackApplication::commitData(QSessionManager &sessionManager)
 		QApplication::processEvents(QEventLoop::AllEvents, 1000);
 
 		// Send signal and process it
-		m_ledDeviceManager->switchOffLeds();
+		QMetaObject::invokeMethod(m_ledDeviceManager, "switchOffLeds", Qt::QueuedConnection);
 		QApplication::processEvents(QEventLoop::AllEvents, 1000);
 	}
 }
